@@ -1,0 +1,326 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx720\tx1440\tx2160\tx2880\tx3600\tx4320\tx5040\tx5760\tx6480\tx7200\tx7920\tx8640\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 -- ==========================================\
+-- Capstone 1: Iowa Liquor Sales Analysis\
+-- Name: Eyerusalem Debero Dallas, Tx\
+-- Category/Vendor: TEQUILA\
+-- ==========================================\
+\
+-- Q1:\
+-- TEQUILA transactions in last quarter of 2014 sorted by highest revenue\
+\
+SELECT *\
+FROM sales\
+WHERE category_name = 'TEQUILA'\
+	AND date BETWEEN '2014-10-01' AND '2014-12-31' \
+	AND convenience_store IS NOT NULL\
+	ORDER BY total DESC \
+	LIMIT 5;\
+\
+-- Notes:\
+-- I filtered TEQUILA sales for Q4 2014 and sorted them by highest revenue.\
+-- This helped me see the top sales performance during that time.\
+-- Result: 16240 rows before LIMIT 5.\
+\
+\
+-- Q2:\
+-- Which TEQUILA transactions had bottle quantity greater than 12?\
+\
+SELECT date, store, description, bottle_qty, total\
+FROM public.sales\
+WHERE category_name ILIKE '%TEQUILA%'\
+	AND bottle_qty > 12\
+	ORDER BY bottle_qty DESC\
+	LIMIT 5;\
+\
+-- Notes:\
+-- I focused on large TEQUILA purchases with more than 12 bottles.\
+-- This helped me identify bulk buyers and high-volume sales.\
+-- Result: 10723 rows before LIMIT 5.\
+\
+\
+-- Q3:\
+-- Find products with keywords 'Spiced' or 'Limited'\
+\
+SELECT item_description, category_name\
+FROM public.products\
+WHERE item_description ILIKE '%Spiced%'\
+   OR item_description ILIKE '%Limited%'\
+	ORDER BY category_name\
+	LIMIT 10;\
+\
+-- Notes:\
+-- I searched for special or limited products using keywords.\
+-- This helped me understand different product categories.\
+-- Result: 139 matching rows before LIMIT 10.\
+\
+\
+-- Q4A:\
+-- Total revenue and average bottle price for TEQUILA\
+\
+SELECT \
+    TO_CHAR(SUM(total), 'FM$999,999,999,999.00') AS total_revenue,\
+    TO_CHAR(AVG(btl_price::numeric), 'FM$999,999,999.00') AS average_bottle_price\
+FROM public.sales\
+WHERE category_name ILIKE '%TEQUILA%';\
+\
+-- Notes:\
+-- I calculated the total revenue and average bottle price for tequila.\
+-- This shows overall performance and pricing behavior.\
+-- Result: $21,411,263.64 revenue and $20.31 average price.\
+\
+\
+-- Q5:\
+-- Most frequently purchased tequila products\
+\
+SELECT description, COUNT(*) AS total_transactions\
+FROM sales\
+WHERE category_name = 'TEQUILA'\
+	GROUP BY description\
+	ORDER BY total_transactions DESC;\
+\
+-- Notes:\
+-- I grouped products to see which tequila is bought the most.\
+-- This helped me identify the most popular product.\
+-- Result: Jose Cuervo Especial Reposado is the top product.\
+\
+\
+-- Q6:\
+-- Which stores generated highest revenue for TEQUILA?\
+\
+SELECT store, \
+    TO_CHAR(SUM(total), 'FM$999,999,999,999.00') AS revenue\
+FROM sales\
+WHERE category_name ILIKE '%TEQUILA%'\
+	GROUP BY store\
+	ORDER BY SUM(total) DESC\
+	LIMIT 5;\
+\
+-- Notes:\
+-- I analyzed which stores make the most tequila sales.\
+-- This shows top-performing store locations.\
+-- Result: Store 2633 is the highest with $1.78M revenue.\
+\
+\
+-- Q7:\
+-- Top vendors by TEQUILA revenue\
+\
+SELECT vendor,\
+       TO_CHAR(SUM(total), 'FM$999,999,999.00') AS revenue\
+FROM sales\
+WHERE category_name ILIKE '%TEQUILA%'\
+GROUP BY vendor\
+ORDER BY SUM(total) DESC\
+LIMIT 5;\
+\
+-- Notes:\
+-- I checked which vendors sell the most tequila.\
+-- This shows the strongest suppliers in the dataset.\
+-- Result: Proximo is the top vendor.\
+\
+\
+-- Q8:\
+-- High-performing stores (> $2000)\
+\
+SELECT store, \
+    TO_CHAR(SUM(total), 'FM$999,999,999.00') AS revenue\
+FROM sales\
+WHERE category_name ILIKE '%TEQUILA%'\
+GROUP BY store\
+HAVING SUM(total) > 2000\
+ORDER BY SUM(total) ASC\
+LIMIT 10;\
+\
+-- Notes:\
+-- I filtered stores that perform above $2000 in tequila sales.\
+-- This helps identify stronger stores.\
+\
+\
+-- Q9:\
+-- Compare TEQUILA vs VODKA\
+\
+SELECT *\
+FROM sales\
+WHERE category_name IN ('TEQUILA', 'VODKA')\
+	AND convenience_store IS NOT NULL;\
+\
+-- Notes:\
+-- I compared tequila with vodka to see product competition.\
+-- This helps understand customer preference.\
+\
+\
+-- Q10:\
+-- Mid-price tequila products\
+\
+SELECT *\
+FROM sales\
+WHERE category_name = 'TEQUILA'\
+	AND btl_price::numeric BETWEEN 10 AND 20\
+	AND convenience_store IS NOT NULL;\
+\
+-- Notes:\
+-- I analyzed mid-range tequila prices.\
+-- This shows common price behavior.\
+\
+\
+-- Q11:\
+-- Store performance with details\
+\
+SELECT s.store, st.name, st.store_address, SUM(s.total) AS tequila_revenue\
+FROM sales s\
+JOIN stores st ON s.store = st.store\
+WHERE s.category_name ILIKE '%TEQUILA%'\
+GROUP BY s.store, st.name, st.store_address\
+ORDER BY tequila_revenue DESC;\
+\
+-- Notes:\
+-- I combined store information with sales data.\
+-- This shows total revenue per store.\
+\
+\
+-- Q12:\
+-- Sales with county population\
+\
+SELECT s.date, s.total, c.population\
+FROM sales s\
+JOIN counties c ON s.county = c.county\
+WHERE s.category_name ILIKE '%TEQUILA%'\
+LIMIT 5;\
+\
+-- Notes:\
+-- I connected sales with population data.\
+-- This helps understand market size impact.\
+\
+\
+-- Q13:\
+-- Revenue by county\
+\
+SELECT county, SUM(total) AS revenue\
+FROM sales\
+WHERE category_name ILIKE '%TEQUILA%'\
+GROUP BY county\
+ORDER BY revenue DESC\
+LIMIT 5;\
+\
+-- Notes:\
+-- I analyzed which counties make the most revenue.\
+-- Polk County is the highest.\
+\
+\
+-- Q14:\
+-- Revenue by proof and pack size\
+\
+SELECT SUM(total::numeric)::money AS tequila_revenue, proof, products.pack\
+FROM public.sales\
+JOIN public.products ON sales.item = products.item_no\
+WHERE sales.category_name ILIKE '%TEQUILA%'\
+GROUP BY proof, products.pack\
+ORDER BY tequila_revenue DESC\
+LIMIT 5;\
+\
+-- Notes:\
+-- I checked which product types sell best by proof and pack size.\
+-- This shows strong product combinations.\
+\
+\
+-- Q15:\
+-- Counties with population > 10,000 but no sales\
+\
+SELECT county, population\
+FROM counties\
+WHERE population > 10000\
+AND county NOT IN (\
+    SELECT county\
+    FROM sales\
+    WHERE category_name ILIKE '%TEQUILA%'\
+);\
+\
+-- Notes:\
+-- I found counties with no tequila sales even with population.\
+-- This shows missing market opportunities.\
+\
+\
+-- Q16:\
+-- Revenue by store status\
+\
+SELECT st.store_status,\
+       SUM(s.total) AS revenue\
+FROM sales s\
+JOIN stores st ON s.store = st.store\
+WHERE s.category_name ILIKE '%TEQUILA%'\
+GROUP BY st.store_status\
+ORDER BY revenue DESC;\
+\
+-- Notes:\
+-- I compared active and inactive stores.\
+-- This shows which stores perform better.\
+\
+\
+-- Q17:\
+-- Des Moines TEQUILA sales\
+\
+SELECT *\
+FROM sales s\
+JOIN stores st ON s.store = st.store\
+WHERE s.category_name ILIKE '%TEQUILA%'\
+AND st.store_address ILIKE '%Des Moines%'\
+AND convenience_store IS NOT NULL;\
+\
+-- Notes:\
+-- I filtered sales in Des Moines.\
+-- This shows city-level performance.\
+\
+\
+-- Q18:\
+-- Stores above average sales\
+\
+SELECT store, SUM(total) AS revenue\
+FROM sales\
+WHERE category_name ILIKE '%TEQUILA%'\
+GROUP BY store\
+HAVING SUM(total) > 10000\
+ORDER BY revenue DESC;\
+\
+-- Notes:\
+-- I found stores performing above average.\
+-- These are strong sales locations.\
+\
+\
+-- Q19:\
+-- Top tequila products\
+\
+SELECT p.item_description,\
+       SUM(s.total) AS revenue\
+FROM sales s\
+JOIN products p ON s.item = p.item_no\
+WHERE s.category_name ILIKE '%TEQUILA%'\
+GROUP BY p.item_description\
+ORDER BY revenue DESC\
+LIMIT 5;\
+\
+-- Notes:\
+-- I checked the best-selling tequila products.\
+-- This shows top revenue products.\
+\
+\
+-- Q20:\
+-- Active store tequila sales\
+\
+SELECT *\
+FROM sales\
+WHERE category_name ILIKE '%TEQUILA%'\
+AND store IN (\
+    SELECT store\
+    FROM stores\
+    WHERE store_status = 'A'\
+    AND convenience_store IS NOT NULL\
+);\
+\
+-- Notes:\
+-- I filtered only active stores.\
+-- This shows reliable ongoing sales.}
